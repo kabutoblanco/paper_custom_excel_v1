@@ -55,6 +55,10 @@ public class FileExcel {
         return areas;
     }
 
+    public File getFile() {
+        return file;
+    }
+
     public XSSFWorkbook getFileExcel() {
         return fileExcel;
     }
