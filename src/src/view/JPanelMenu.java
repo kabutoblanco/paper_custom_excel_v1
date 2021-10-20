@@ -5,12 +5,19 @@
  */
 package src.view;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
+import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import src.controller.Controller;
 
@@ -20,7 +27,7 @@ import src.controller.Controller;
  */
 public class JPanelMenu extends JPanel implements ActionListener {
 
-    private JButton jButtonLoadFile, jButtonGenerate;
+    private JButton jButtonLoadFile, jButtonGenerate, jButtonClear, jButtonClose;
     private JFileChooser jFileChooserExcel = new JFileChooser();
     
     private Controller controller;
@@ -31,14 +38,28 @@ public class JPanelMenu extends JPanel implements ActionListener {
     }
 
     private void initComponents() {
+        //Config components
+        setBorder(new TitledBorder("Menu"));
         FileNameExtensionFilter filter = new FileNameExtensionFilter("EXCEL FILES", "xlsx", "xls");
         jFileChooserExcel.setFileFilter(filter);
-        jButtonLoadFile = new JButton("CARGAR");
-        jButtonGenerate = new JButton("GENERAR");
+        jButtonLoadFile = new JButton("UPLOAD");
+        jButtonGenerate = new JButton("GENERATE");
+        jButtonClear = new JButton("CLEAN");
+        jButtonClose = new JButton("CLOSE");
         jButtonLoadFile.addActionListener(this);
         jButtonGenerate.addActionListener(this);
-        add("loadFile", jButtonLoadFile);
-        add("generate", jButtonGenerate);
+        jButtonClear.addActionListener(this);
+        jButtonClose.addActionListener(this);
+        //Config layout       
+        setLayout(new GridBagLayout());
+        GridBagConstraints gb = new GridBagConstraints();
+        gb.insets = new Insets(2, 2, 2, 2);
+        gb.gridx = 0;
+        gb.fill = GridBagConstraints.HORIZONTAL;
+        add(jButtonLoadFile, gb);
+        add(jButtonGenerate, gb);
+        add(jButtonClear, gb);
+        add(jButtonClose, gb);
     }
     
     public void notifyOpenFile(File fileExcel) {

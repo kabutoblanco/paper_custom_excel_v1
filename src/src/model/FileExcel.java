@@ -41,7 +41,22 @@ public class FileExcel {
         return headers;
     }
     
-    public void getSubAreas() {
-        
+    public ArrayList<PaperArea> getSubAreas() {
+        ArrayList<PaperArea> areas = new ArrayList<>();
+        XSSFSheet sheet = fileExcel.getSheetAt(2);
+        for (Row row : sheet) {
+            String value = row.getCell(1).getStringCellValue();
+            if (row.getCell(1).getCellStyle().getFontIndex() == 5 && !value.equals("Description")) {
+                areas.add(new PaperArea(value));
+            } else if (row.getCell(1).getCellStyle().getFontIndex() == 6) {
+                areas.get(areas.size() - 1).getSubAreas().add(value);
+            }
+        }
+        return areas;
     }
+
+    public XSSFWorkbook getFileExcel() {
+        return fileExcel;
+    }
+    
 }
