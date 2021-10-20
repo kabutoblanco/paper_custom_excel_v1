@@ -5,6 +5,7 @@
  */
 package src.view;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.border.TitledBorder;
 
 /**
  *
@@ -32,14 +35,21 @@ public class JPanelColumns extends JPanel implements ActionListener {
     private void initComponents() {
         jListColumnsAvaliable = new JList();
         jListColumnsSelect = new JList();
+        JScrollPane jScrollPaneAvaliable = new JScrollPane(jListColumnsAvaliable);
+        JScrollPane jScrollPaneSelect = new JScrollPane(jListColumnsSelect);
+        jScrollPaneAvaliable.setPreferredSize(new Dimension(jScrollPaneAvaliable.getPreferredSize().width, 400));
+        jScrollPaneSelect.setPreferredSize(new Dimension(jScrollPaneSelect.getPreferredSize().width , 400));
+        jScrollPaneAvaliable.setBorder(new TitledBorder("Columns avaliable"));
+        jScrollPaneSelect.setBorder(new TitledBorder("Columns select"));
         jButtonSelect = new JButton(">");
         jButtonUnselect = new JButton("<");
         jButtonSelect.addActionListener(this);
         jButtonUnselect.addActionListener(this);
-        add("columnsAvaliable", jListColumnsAvaliable);
-        add("columnsSelect", jListColumnsSelect);
-        add("select", jButtonSelect);
-        add("unselect", jButtonUnselect);
+        add(jScrollPaneAvaliable);
+        add(jButtonSelect);
+        add(jButtonUnselect);
+        add(jScrollPaneSelect);
+        
     }
 
     public void loadColumns(ArrayList<String> headers) {
