@@ -37,10 +37,10 @@ public class GeneratorByArea extends GeneratorExcel {
                 String value = row.getCell(9).getStringCellValue();
                 for (PaperArea area : areas) {
                     boolean flag = false;
-                    for (String subArea : area.getSubAreas()) {
-                        if (subArea.equals(value)) {
-                            System.out.println(value + " : " + subArea + " : - " + area.getArea());
-                            area.getPapers().add(value);
+                    for (PaperArea subArea : area.getSubAreas()) {
+                        if (subArea.getArea().equals(value)) {
+                            // saved paper whitin subarea
+                            subArea.getSubAreas().add(new PaperArea(row.getCell(1).getStringCellValue()));
                             flag = true;
                             break;
                         }
@@ -52,8 +52,24 @@ public class GeneratorByArea extends GeneratorExcel {
         }
         Workbook wb = new XSSFWorkbook();
         Sheet sheet_v1 = wb.createSheet("example");
-        XSSFRow row = (XSSFRow) sheet_v1.createRow((short) 0);
-        row.createCell(0).setCellValue("PRUEBA");
+        
+        i = 0;
+        for (PaperArea area : areas) {
+            for (PaperArea subArea : area.getSubAreas()) {
+                i++;
+                XSSFRow row = (XSSFRow) sheet_v1.createRow(i);
+                row.createCell(0).setCellValue(subArea.getArea() + " - " + area.getArea());
+                for (PaperArea subAreaPaper : subArea.getSubAreas()) {
+                    i++;
+                    XSSFRow row1 = (XSSFRow) sheet_v1.createRow(i);
+                    row1.createCell(0).setCellValue(subAreaPaper.getArea());
+                    System.out.println(i);
+                }
+            }
+            i++;
+            System.out.println(i);
+        }
+        System.out.println(i);
         try {   
             OutputStream fileOut = new FileOutputStream("/home/daniel/Documents/BankStatement.xlsx");
             wb.write(fileOut);  

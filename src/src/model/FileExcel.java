@@ -49,7 +49,7 @@ public class FileExcel {
             if (row.getCell(1).getCellStyle().getFontIndex() == 5 && !value.equals("Description")) {
                 areas.add(new PaperArea(value));
             } else if (row.getCell(1).getCellStyle().getFontIndex() == 6) {
-                areas.get(areas.size() - 1).getSubAreas().add(value);
+                areas.get(areas.size() - 1).getSubAreas().add(new PaperArea(value));
             }
         }
         return areas;
