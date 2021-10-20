@@ -69,9 +69,10 @@ public class GeneratorByArea extends GeneratorExcel {
             i++;
             System.out.println(i);
         }
-        System.out.println(i);
+        System.out.println("fuera");
+        System.out.println(location);
         try {   
-            OutputStream fileOut = new FileOutputStream(location + "\\BankStatement.xlsx");
+            OutputStream fileOut = new FileOutputStream(location + "BankStatement.xlsx");
             wb.write(fileOut);  
             
         } catch (FileNotFoundException ex) {

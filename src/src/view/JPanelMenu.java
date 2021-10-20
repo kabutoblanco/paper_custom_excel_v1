@@ -13,6 +13,9 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -29,6 +32,7 @@ public class JPanelMenu extends JPanel implements ActionListener {
 
     private JButton jButtonLoadFile, jButtonGenerate, jButtonClear, jButtonClose;
     private JFileChooser jFileChooserExcel = new JFileChooser();
+    private JFileChooser jFileChooserGenerate = new JFileChooser();
     
     private Controller controller;
 
@@ -77,7 +81,12 @@ public class JPanelMenu extends JPanel implements ActionListener {
         }
         
         if (e.getSource() == jButtonGenerate) {
-            controller.generateFile("/home/daniel/Documents/");
+            jFileChooserGenerate.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int returnVal = jFileChooserGenerate.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                controller.generateFile(jFileChooserGenerate.getCurrentDirectory() + File.separator);
+            }
+            
         }
     }
     
