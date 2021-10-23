@@ -5,18 +5,28 @@
  */
 package src.model;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static org.apache.poi.hssf.record.aggregates.RowRecordsAggregate.createRow;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -40,41 +50,91 @@ public class GeneratorByArea extends GeneratorExcel {
                     for (PaperArea subArea : area.getSubAreas()) {
                         if (subArea.getArea().equals(value)) {
                             // saved paper whitin subarea
-                            subArea.getSubAreas().add(new PaperArea(row.getCell(1).getStringCellValue()));
+                            String paperValue = "";
+                            for (Object select : columnsSelect) {
+                                int index = Integer.parseInt(((String) select).split("-")[0]);
+                                System.out.println(i);
+                                if (row.getCell(index) != null) {
+                                    Enum type = row.getCell(index).getCellTypeEnum();
+                                    if (type == CellType.STRING) {
+                                        paperValue += row.getCell(index).getStringCellValue() + "\r";
+                                    } else if (type == CellType.NUMERIC) {
+                                        paperValue += new BigDecimal(Double.toString(row.getCell(index).getNumericCellValue())).stripTrailingZeros().toPlainString() + "\r";
+                                    }
+                                }
+                            }
+                            subArea.getSubAreas().add(new PaperArea(paperValue));
                             flag = true;
                             break;
                         }
                     }
-                    if (flag) break;
+                    if (flag) {
+                        break;
+                    }
                 }
             }
             i++;
         }
         Workbook wb = new XSSFWorkbook();
-        Sheet sheet_v1 = wb.createSheet("example");
-        
-        i = 0;
+        XSSFSheet sheet_v1 = (XSSFSheet) wb.createSheet("example");
+
+        i = -1;
         for (PaperArea area : areas) {
             for (PaperArea subArea : area.getSubAreas()) {
                 i++;
-                XSSFRow row = (XSSFRow) sheet_v1.createRow(i);
-                row.createCell(0).setCellValue(subArea.getArea() + " - " + area.getArea());
+                XSSFRow rowHeader = (XSSFRow) sheet_v1.createRow(i);
+                XSSFCell cellHeader = rowHeader.createCell(0);
+                cellHeader.setCellValue("Scopus Suject Area \"" + area.getArea() + "\"");                
+                sheet_v1.addMergedRegion(new CellRangeAddress(i, i, 0, columnsSelect.length));
+                cellHeader.setCellStyle(customCellForeground("#1f4e79", "#ffffff", HorizontalAlignment.CENTER, 18, wb));
+                rowHeader.setHeight((short) (7 * 100));
+                i++;
+                XSSFRow rowSubHeader = (XSSFRow) sheet_v1.createRow(i);
+                XSSFCell cellSubHeader = rowSubHeader.createCell(0);
+                cellSubHeader.setCellValue("Scopus Sub Suject Area \"" + subArea.getArea() + "\"");                
+                sheet_v1.addMergedRegion(new CellRangeAddress(i, i, 0, columnsSelect.length));
+                cellSubHeader.setCellStyle(customCellForeground("#deebf7", "#843c0b", HorizontalAlignment.CENTER, 16, wb));
+                rowSubHeader.setHeight((short) (6 * 100));
+                i++;
+                XSSFRow rowTitle = (XSSFRow) sheet_v1.createRow(i);
+                for (int j = -1; j < columnsSelect.length; j++) {                    
+                    if (j == -1) {
+                        XSSFCell cellTitle = rowTitle.createCell(0);
+                        cellTitle.setCellValue("#");
+                        cellTitle.setCellStyle(customCellForeground("#5b9bd5", "#ffffff", HorizontalAlignment.LEFT, 11, wb));
+                    } else {
+                        String header = ((String) columnsSelect[j]).split("-")[1];
+                        XSSFCell cellTitle = rowTitle.createCell(j + 1);
+                        cellTitle.setCellValue(header);
+                        cellTitle.setCellStyle(customCellForeground("#5b9bd5", "#ffffff", HorizontalAlignment.LEFT, 11, wb));
+                    }
+                    
+                }
+                rowTitle.setHeight((short) (5 * 100));
+                int k = 0;
                 for (PaperArea subAreaPaper : subArea.getSubAreas()) {
                     i++;
-                    XSSFRow row1 = (XSSFRow) sheet_v1.createRow(i);
-                    row1.createCell(0).setCellValue(subAreaPaper.getArea());
-                    System.out.println(i);
+                    XSSFRow rowBody = (XSSFRow) sheet_v1.createRow(i);
+                    String[] values = subAreaPaper.getArea().split("\r");
+                    rowBody.createCell(0).setCellValue(k);
+                    for (int j = 0; j < values.length; j++) {
+                        rowBody.createCell(j + 1).setCellValue(values[j]);
+                    }
+                    k++;
                 }
             }
-            i++;
-            System.out.println(i);
         }
-        System.out.println("fuera");
-        System.out.println(location);
-        try {   
-            OutputStream fileOut = new FileOutputStream(location + "BankStatement.xlsx");
-            wb.write(fileOut);  
-            
+        for (int j = 0; j < columnsSelect.length; j++) {
+            sheet_v1.setColumnWidth(0, 10 * 100);
+            if (columnsSelect[j].equals("1-Title"))
+                sheet_v1.setColumnWidth(j, 80 * 100);   
+            else
+                sheet_v1.setColumnWidth(j, 30 * 100);            
+        }
+        System.out.println("OK");
+        try {
+            OutputStream fileOut = new FileOutputStream(location + "paper.xlsx");
+            wb.write(fileOut);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(GeneratorByArea.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -91,4 +151,22 @@ public class GeneratorByArea extends GeneratorExcel {
         }
     }
     
+    private XSSFCellStyle customCellForeground(String rgb, String rgb1, HorizontalAlignment alignment, int size, Workbook wb) {
+        XSSFColor color = new XSSFColor(Color.decode(rgb));
+        XSSFCellStyle cellStyle = (XSSFCellStyle) wb.createCellStyle();
+        cellStyle.setWrapText(true);
+        cellStyle.setFillForegroundColor(color);
+        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        
+        XSSFColor color1 = new XSSFColor(Color.decode(rgb1));
+        XSSFFont font = (XSSFFont) wb.createFont();
+        font.setFontHeight(size);
+        font.setBold(true);
+        font.setColor(color1);
+        cellStyle.setFont(font);
+        cellStyle.setAlignment(alignment);
+        cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        return cellStyle;
+    }
+
 }

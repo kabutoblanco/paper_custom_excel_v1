@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -33,8 +35,10 @@ public class FileExcel {
         ArrayList<String> headers = new ArrayList<>();
         XSSFSheet sheet = fileExcel.getSheetAt(1);
         for (Row row : sheet) {
+            int i = 0;
             for (Cell cell : row) {
-                headers.add(cell.getStringCellValue());
+                headers.add(i + "-" + cell.getStringCellValue());
+                i++;
             }
             break;
         }
@@ -46,9 +50,11 @@ public class FileExcel {
         XSSFSheet sheet = fileExcel.getSheetAt(2);
         for (Row row : sheet) {
             String value = row.getCell(1).getStringCellValue();
-            if (row.getCell(1).getCellStyle().getFontIndex() == 5 && !value.equals("Description")) {
+            XSSFCellStyle cellStyle = (XSSFCellStyle) row.getCell(1).getCellStyle();
+            XSSFFont font = cellStyle.getFont();
+            if (font.getBold() && !value.equals("Description")) {
                 areas.add(new PaperArea(value));
-            } else if (row.getCell(1).getCellStyle().getFontIndex() == 6) {
+            } else if (!font.getBold()) {
                 areas.get(areas.size() - 1).getSubAreas().add(new PaperArea(value));
             }
         }
