@@ -8,6 +8,7 @@ package src.view;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 import javax.swing.JLabel;
@@ -19,10 +20,25 @@ import javax.swing.border.TitledBorder;
  * @author daniel
  */
 public class JPanelInformation extends JPanel implements Observer {
-
+    private String nameFileCurrent = "not found";
+    private String locationFileCurrent = "/home/";
+    private String status = "--";
+    
     @Override
     public void update(Observable o, Object arg) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            /*ArrayList<String> status = (ArrayList<String>) arg;
+            nameFileCurrent = status.get(0);
+            locationFileCurrent = status.get(1);
+            jLabelNameFileCurrent.setText("Uploaded file: " + nameFileCurrent);
+            jLabelLocationFileCurrent.setText("Location of the generated file: " + locationFileCurrent);*/
+            
+            try{
+                String[] statusAux = ((String) arg).split("-");
+                status = statusAux[1];
+                jLabelStatus.setText("Status: " + status);
+            }catch(ClassCastException e){
+                
+            }
     }
     
     private JLabel jLabelNameFileCurrent;
@@ -35,9 +51,9 @@ public class JPanelInformation extends JPanel implements Observer {
     
     private void initComponents(){
         setBorder(new TitledBorder("Information"));
-        jLabelNameFileCurrent = new JLabel("Uploaded file: not found");
-        jLabelLocationFileCurrent = new JLabel("Location of the generated file: /home/");
-        jLabelStatus = new JLabel("Status: --");
+        jLabelNameFileCurrent = new JLabel("Uploaded file: " + nameFileCurrent);
+        jLabelLocationFileCurrent = new JLabel("Location of the generated file: " + locationFileCurrent);
+        jLabelStatus = new JLabel("Status: " + status);
         setLayout(new GridBagLayout());
         GridBagConstraints gb = new GridBagConstraints();
         gb.insets = new Insets(2, 2, 2, 2);

@@ -7,10 +7,13 @@ package src.controller;
 
 import java.io.File;
 import src.model.AbstractFactory;
+import src.model.GeneratorByArea;
 import src.model.GeneratorByAreaAbstractFactory;
 import src.model.GeneratorExcel;
 import src.view.JPanelColumns;
+import src.view.JPanelInformation;
 import src.view.JPanelMenu;
+import src.view.JPanelProgress;
 
 /**
  *
@@ -23,19 +26,28 @@ public class Controller {
     
     private JPanelMenu jPanelMenu;
     private JPanelColumns jPanelColumns;
+    private JPanelInformation jPanelInformation;
+    private JPanelProgress jPanelProgress;
 
     public void createGeneraterExcel() {
         abstractFactory = new GeneratorByAreaAbstractFactory();
         generatorExcel = abstractFactory.createGeneratorExcel();
+        generatorExcel.addObserver(jPanelInformation);   
+        generatorExcel.addObserver(jPanelProgress);
     }
 
     public void loadFile(File fileExcel) {
         generatorExcel.loadFile(fileExcel);
-        jPanelColumns.loadColumns(generatorExcel.getFileExcel().getColumnHeader());
+        generatorExcel.getFileExcel().addObserver(jPanelInformation);
+        generatorExcel.getFileExcel().addObserver(jPanelColumns);
     }
 
     public void generateFile(String location) {
-        generatorExcel.generate(location, jPanelColumns.getjListColumnsSelect());
+        GeneratorByArea generator = (GeneratorByArea) generatorExcel;
+        generator.setLocation(location);
+        generator.setColumnsSelect(jPanelColumns.getjListColumnsSelect());
+        Thread t = new Thread(generator);
+        t.start();
     }
 
     public void setjPanelMenu(JPanelMenu jPanelMenu) {
@@ -45,5 +57,13 @@ public class Controller {
     public void setjPanelCollumns(JPanelColumns jPanelCollumns) {
         this.jPanelColumns = jPanelCollumns;
     }    
+
+    public void setjPanelInformation(JPanelInformation jPanelInformation) {
+        this.jPanelInformation = jPanelInformation;
+    }
+
+    public void setjPanelProgress(JPanelProgress jPanelProgress) {
+        this.jPanelProgress = jPanelProgress;
+    }
     
 }

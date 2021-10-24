@@ -35,12 +35,35 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  *
  * @author daniel
  */
-public class GeneratorByArea extends GeneratorExcel {
+public class GeneratorByArea extends GeneratorExcel implements Runnable {
+    String location;
+    Object[] columnsSelect;
 
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setColumnsSelect(Object[] columnsSelect) {
+        this.columnsSelect = columnsSelect;
+    }
+    
+    @Override
+    public void run(){
+        generate(location, columnsSelect);
+    }
+    
     @Override
     public void generate(String location, Object[] columnsSelect) {
+        setChanged();
+        notifyObservers(true);
+        setChanged();
+        notifyObservers("0-Cargando subáreas");
         ArrayList<PaperArea> areas = fileExcel.getSubAreas();
+        setChanged();
+        notifyObservers("0-Cargando hoja de papers");
+        setChanged();
         XSSFSheet sheet = fileExcel.getFileExcel().getSheetAt(1);
+        notifyObservers("0-Recorriendo lista de papers");
         int i = 0;
         for (Row row : sheet) {
             if (i != 0) {
@@ -53,7 +76,6 @@ public class GeneratorByArea extends GeneratorExcel {
                             String paperValue = "";
                             for (Object select : columnsSelect) {
                                 int index = Integer.parseInt(((String) select).split("-")[0]);
-                                System.out.println(i);
                                 if (row.getCell(index) != null) {
                                     Enum type = row.getCell(index).getCellTypeEnum();
                                     if (type == CellType.STRING) {
@@ -76,12 +98,18 @@ public class GeneratorByArea extends GeneratorExcel {
             i++;
         }
         Workbook wb = new XSSFWorkbook();
+        setChanged();
+        notifyObservers("0-Generando nuevo archivo Excel");
         XSSFSheet sheet_v1 = (XSSFSheet) wb.createSheet("example");
+        setChanged();
+        notifyObservers("0-Generando nuevos registros");
 
         i = -1;
         for (PaperArea area : areas) {
             for (PaperArea subArea : area.getSubAreas()) {
                 i++;
+                setChanged();
+                notifyObservers("0-Generando registros de " + subArea.getArea() );
                 XSSFRow rowHeader = (XSSFRow) sheet_v1.createRow(i);
                 XSSFCell cellHeader = rowHeader.createCell(0);
                 cellHeader.setCellValue("Scopus Suject Area \"" + area.getArea() + "\"");                
@@ -97,6 +125,8 @@ public class GeneratorByArea extends GeneratorExcel {
                 rowSubHeader.setHeight((short) (6 * 100));
                 i++;
                 XSSFRow rowTitle = (XSSFRow) sheet_v1.createRow(i);
+                setChanged();
+                notifyObservers("0-Generando estilos");
                 for (int j = -1; j < columnsSelect.length; j++) {                    
                     if (j == -1) {
                         XSSFCell cellTitle = rowTitle.createCell(0);
@@ -131,24 +161,27 @@ public class GeneratorByArea extends GeneratorExcel {
             else
                 sheet_v1.setColumnWidth(j, 30 * 100);            
         }
-        System.out.println("OK");
+        setChanged();
+        notifyObservers("0-Intentando guardar archivo");
+        setChanged();
         try {
             OutputStream fileOut = new FileOutputStream(location + "paper.xlsx");
             wb.write(fileOut);
+            notifyObservers("0-Archivo guardado");
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(GeneratorByArea.class.getName()).log(Level.SEVERE, null, ex);
+            notifyObservers("0-No existe el archivo");
         } catch (IOException ex) {
-            Logger.getLogger(GeneratorByArea.class.getName()).log(Level.SEVERE, null, ex);
+            notifyObservers("0-No se puede guardar el archivo");
         }
+        setChanged();
+        notifyObservers(false);
     }
 
     @Override
     public void loadFile(File fileExcel) {
-        try {
-            this.fileExcel = new FileExcel(fileExcel);
-        } catch (IOException ex) {
-            Logger.getLogger(GeneratorByArea.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        this.fileExcel = new FileExcel(fileExcel);
+        Thread t = new Thread(this.fileExcel);
+        t.start();
     }
     
     private XSSFCellStyle customCellForeground(String rgb, String rgb1, HorizontalAlignment alignment, int size, Workbook wb) {

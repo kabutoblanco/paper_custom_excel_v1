@@ -10,6 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JList;
@@ -21,7 +23,7 @@ import javax.swing.border.TitledBorder;
  *
  * @author daniel
  */
-public class JPanelColumns extends JPanel implements ActionListener {
+public class JPanelColumns extends JPanel implements ActionListener, Observer {
 
     private JList jListColumnsAvaliable;
     private JList jListColumnsSelect;
@@ -91,6 +93,16 @@ public class JPanelColumns extends JPanel implements ActionListener {
         DefaultListModel listModelSelect = (DefaultListModel) jListColumnsSelect.getModel();
         Object[] list = listModelSelect.toArray();
         return list;
+    }
+
+    @Override
+    public void update(Observable o, Object o1) {
+        
+        try{
+                loadColumns((ArrayList<String>) o1);
+            }catch(ClassCastException e){
+                
+            }
     }
     
 }

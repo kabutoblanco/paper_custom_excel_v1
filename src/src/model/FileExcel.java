@@ -10,6 +10,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Observable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
@@ -21,14 +24,36 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  *
  * @author daniel
  */
-public class FileExcel {
+public class FileExcel extends Observable implements Runnable{
     private File file;
     private XSSFWorkbook fileExcel;
 
-    public FileExcel(File file) throws FileNotFoundException, IOException {
-        this.file = file;
-        FileInputStream fis = new FileInputStream(file);
-        this.fileExcel = new XSSFWorkbook(fis);
+    public FileExcel(File file){
+        this.file = file;       
+    }
+    
+    public void loadFile(){
+        FileInputStream fis = null;
+        setChanged();
+        try {
+            notifyObservers("1-Cargando archivo");
+            fis = new FileInputStream(file);
+            setChanged();
+            notifyObservers("1-Convirtiendo archivo a formato Excel");
+            this.fileExcel = new XSSFWorkbook(fis);
+            setChanged();
+            notifyObservers(this.getColumnHeader());
+        } catch (FileNotFoundException ex) {
+            notifyObservers("1-Archivo no encontrado");
+        } catch (IOException ex) {
+            notifyObservers("1-No se pudo leer el archivo");
+        } finally {
+            try {
+                fis.close();
+            } catch (IOException ex) {
+                notifyObservers("1-No se pudo cerrar el archivo");
+            }
+        }
     }
     
     public ArrayList<String> getColumnHeader() {
@@ -67,6 +92,11 @@ public class FileExcel {
 
     public XSSFWorkbook getFileExcel() {
         return fileExcel;
+    }
+
+    @Override
+    public void run() {
+        loadFile();
     }
     
 }
