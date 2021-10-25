@@ -16,10 +16,10 @@ import javax.swing.JFrame;
  * @author daniel
  */
 public class JFrameMain extends JFrame {
-    private JPanelMenu jPanelMenu;
-    private JPanelColumns jPanelColumns;
-    private JPanelInformation jPanelInformation;
-    private JPanelProgress jPanelProgress;
+    private final JPanelMenu jPanelMenu;
+    private final JPanelColumns jPanelColumns;
+    private final JPanelInformation jPanelInformation;
+    private final JPanelProgress jPanelProgress;
 
     public JFrameMain(JPanelMenu jPanelMenu, JPanelColumns jPanelColumns, JPanelInformation jPanelInformation, JPanelProgress jPanelProgress, String title) throws HeadlessException {
         super(title);

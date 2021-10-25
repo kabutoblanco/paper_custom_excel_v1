@@ -7,22 +7,26 @@ package src.view;
 
 import java.util.Observable;
 import java.util.Observer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import src.controller.Controller;
+import src.model.FileExcel;
+import src.model.GeneratorByArea;
 
 /**
  *
  * @author judag
  */
 public class JPanelProgress extends JProgressBar implements Observer, Runnable {
+    
+    private Boolean status = false;
+    private final Object event = new Object();
+    
+    private final Controller controller;
 
-    Boolean status = false;
-
-    public JPanelProgress(int i, int i1, int i2) {
+    public JPanelProgress(int i, int i1, int i2, Controller controller) {
         super(i, i1, i2);
         initComponents();
+        this.controller = controller;
     }
 
     private void initComponents() {
@@ -33,39 +37,39 @@ public class JPanelProgress extends JProgressBar implements Observer, Runnable {
     public void update(Observable o, Object o1) {
         try {
             status = (Boolean) o1;
-            if(!status){
+            if (o.getClass() == FileExcel.class && status) {
+                controller.getjPanelMenu().getjButtonGenerate().setEnabled(false);
+            }
+            if (o.getClass() == FileExcel.class && !status) {
+                controller.getjPanelMenu().getjButtonGenerate().setEnabled(true);
+            }
+            if (!status) {
                 setValue(0);
                 setString("");
                 repaint();
-            }else{
+            } else {
                 setString("running...");
                 repaint();
             }
-            System.out.println(status);
-        } catch (ClassCastException e) {
-
-        }
-
+        } catch (ClassCastException e) {}
     }
 
     @Override
     public void run() {
-        int i = 0;
-        while (true) {
-            try {
-                Thread.sleep(50);
-                if (i > 100) {
-                    i = 0;
-                }
+        synchronized(event) {
+            int i = 0;
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    event.wait(100);
+                } catch (InterruptedException ex) {}
+                if (i > 100) i = 0;
                 if (status) {
                     setValue(i);
                     repaint();
                     i += 10;
                 }
-            } catch (InterruptedException ex) {
-                Logger.getLogger(JPanelProgress.class.getName()).log(Level.SEVERE, null, ex);
             }
-
         }
     }
+    
 }

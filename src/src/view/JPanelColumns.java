@@ -97,12 +97,9 @@ public class JPanelColumns extends JPanel implements ActionListener, Observer {
 
     @Override
     public void update(Observable o, Object o1) {
-        
-        try{
-                loadColumns((ArrayList<String>) o1);
-            }catch(ClassCastException e){
-                
-            }
+        try {
+            loadColumns((ArrayList<String>) o1);
+        } catch (ClassCastException e) {}
     }
     
 }

@@ -27,17 +27,18 @@ public class client {
         JPanelMenu jPanelMenu = new JPanelMenu(controller);
         JPanelColumns jPanelColumns = new JPanelColumns();
         JPanelInformation jPanelInformation = new JPanelInformation();
-        JPanelProgress jPanelProgress = new JPanelProgress(JProgressBar.HORIZONTAL, 0, 100);
+        JPanelProgress jPanelProgress = new JPanelProgress(JProgressBar.HORIZONTAL, 0, 100, controller);
         Thread t = new Thread(jPanelProgress);
         t.start();
         // Config controller        
+        controller.setjPanelProgress(jPanelProgress);
         controller.setjPanelMenu(jPanelMenu);
         controller.setjPanelCollumns(jPanelColumns);
         controller.setjPanelInformation(jPanelInformation);
-        controller.setjPanelProgress(jPanelProgress);
         controller.createGeneraterExcel();
         // Config frame
         JFrameMain jFrameMain = new JFrameMain(jPanelMenu, jPanelColumns, jPanelInformation,jPanelProgress, "Test");
+        controller.setjFrame(jFrameMain);
         jFrameMain.config();
         jFrameMain.setVisible(true);
     }

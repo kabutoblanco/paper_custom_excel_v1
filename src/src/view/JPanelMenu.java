@@ -13,6 +13,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -25,10 +26,11 @@ import src.controller.Controller;
 public class JPanelMenu extends JPanel implements ActionListener {
 
     private JButton jButtonLoadFile, jButtonGenerate, jButtonClear, jButtonClose;
-    private JFileChooser jFileChooserExcel = new JFileChooser();
-    private JFileChooser jFileChooserGenerate = new JFileChooser();
     
-    private Controller controller;
+    private final JFileChooser jFileChooserExcel = new JFileChooser();
+    private final JFileChooser jFileChooserGenerate = new JFileChooser();
+    
+    private final Controller controller;
 
     public JPanelMenu(Controller controller) {
         initComponents();
@@ -40,9 +42,10 @@ public class JPanelMenu extends JPanel implements ActionListener {
         setBorder(new TitledBorder("Menu"));
         FileNameExtensionFilter filter = new FileNameExtensionFilter("EXCEL FILES", "xlsx", "xls");
         jFileChooserExcel.setFileFilter(filter);
+        jFileChooserGenerate.setFileFilter(filter);
         jButtonLoadFile = new JButton("UPLOAD");
         jButtonGenerate = new JButton("GENERATE");
-        jButtonClear = new JButton("CLEAN");
+        jButtonClear = new JButton("RESET");
         jButtonClose = new JButton("CLOSE");
         jButtonLoadFile.addActionListener(this);
         jButtonGenerate.addActionListener(this);
@@ -56,12 +59,8 @@ public class JPanelMenu extends JPanel implements ActionListener {
         gb.fill = GridBagConstraints.HORIZONTAL;
         add(jButtonLoadFile, gb);
         add(jButtonGenerate, gb);
-        add(jButtonClear, gb);
+        //add(jButtonClear, gb);
         add(jButtonClose, gb);
-    }
-    
-    public void notifyOpenFile(File fileExcel) {
-        controller.loadFile(fileExcel);
     }
 
     @Override
@@ -70,19 +69,42 @@ public class JPanelMenu extends JPanel implements ActionListener {
             int returnVal = jFileChooserExcel.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = jFileChooserExcel.getSelectedFile();
-                notifyOpenFile(file);
+                controller.loadFile(file);
             }
         }
         
         if (e.getSource() == jButtonGenerate) {
-            jFileChooserGenerate.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            jFileChooserGenerate.setAcceptAllFileFilterUsed(false);
-            int returnVal = jFileChooserGenerate.showOpenDialog(this);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                controller.generateFile(jFileChooserGenerate.getSelectedFile().getAbsoluteFile()+ File.separator);
-            }
-            
+            if (controller.getGeneratorExcel().getFileExcel() != null) {
+                if (controller.getjPanelColumns().getjListColumnsSelect().length > 1) {
+                    jFileChooserGenerate.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                    jFileChooserGenerate.setSelectedFile(new File("report.xlsx"));
+                    jFileChooserGenerate.setAcceptAllFileFilterUsed(false);
+                    int returnVal = jFileChooserGenerate.showSaveDialog(this);
+                    if (returnVal == JFileChooser.APPROVE_OPTION) {
+                        String name = jFileChooserGenerate.getSelectedFile().getName();
+                        String directory = jFileChooserGenerate.getCurrentDirectory().getAbsolutePath();
+                        if (name.endsWith(".xls") || name.endsWith(".xlsx"))
+                            controller.generateFile(jFileChooserGenerate.getSelectedFile().getAbsolutePath(), directory);                            
+                        else
+                            controller.generateFile(jFileChooserGenerate.getSelectedFile().getAbsolutePath() + ".xlsx", directory);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(controller.getjFrame(), "Selected one more columns", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(controller.getjFrame(), "Loaded one file", "Error", JOptionPane.ERROR_MESSAGE);
+            } 
         }
+        
+        if (e.getSource() == jButtonClose) {
+            controller.getjFrame().setVisible(false);
+            controller.getjFrame().dispose();
+            System.exit(0);
+        }
+    }
+
+    public JButton getjButtonGenerate() {
+        return jButtonGenerate;
     }
     
 }

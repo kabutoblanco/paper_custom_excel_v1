@@ -6,6 +6,7 @@
 package src.controller;
 
 import java.io.File;
+import javax.swing.JFrame;
 import src.model.AbstractFactory;
 import src.model.GeneratorByArea;
 import src.model.GeneratorByAreaAbstractFactory;
@@ -24,6 +25,7 @@ public class Controller {
     private AbstractFactory abstractFactory;
     private GeneratorExcel generatorExcel;
     
+    private JFrame jFrame;
     private JPanelMenu jPanelMenu;
     private JPanelColumns jPanelColumns;
     private JPanelInformation jPanelInformation;
@@ -40,14 +42,36 @@ public class Controller {
         generatorExcel.loadFile(fileExcel);
         generatorExcel.getFileExcel().addObserver(jPanelInformation);
         generatorExcel.getFileExcel().addObserver(jPanelColumns);
+        generatorExcel.getFileExcel().addObserver(jPanelProgress);
     }
 
-    public void generateFile(String location) {
+    public void generateFile(String location, String directory) {
         GeneratorByArea generator = (GeneratorByArea) generatorExcel;
+        generator.setDirectory(directory);
         generator.setLocation(location);
         generator.setColumnsSelect(jPanelColumns.getjListColumnsSelect());
         Thread t = new Thread(generator);
         t.start();
+    }
+
+    public GeneratorExcel getGeneratorExcel() {
+        return generatorExcel;
+    }
+
+    public JFrame getjFrame() {
+        return jFrame;
+    }
+
+    public JPanelMenu getjPanelMenu() {
+        return jPanelMenu;
+    }
+
+    public JPanelColumns getjPanelColumns() {
+        return jPanelColumns;
+    }
+
+    public void setjFrame(JFrame jFrame) {
+        this.jFrame = jFrame;
     }
 
     public void setjPanelMenu(JPanelMenu jPanelMenu) {

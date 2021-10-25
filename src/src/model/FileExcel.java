@@ -13,18 +13,22 @@ import java.util.ArrayList;
 import java.util.Observable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.poi.EncryptedDocumentException;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import src.response.Response;
 
 /**
  *
  * @author daniel
  */
-public class FileExcel extends Observable implements Runnable{
+public class FileExcel extends Observable implements Runnable {
     private File file;
     private XSSFWorkbook fileExcel;
 
@@ -33,57 +37,98 @@ public class FileExcel extends Observable implements Runnable{
     }
     
     public void loadFile(){
-        FileInputStream fis = null;
+        setChanged();
+        notifyObservers(true);
         setChanged();
         try {
-            notifyObservers("1-Cargando archivo");
-            fis = new FileInputStream(file);
+            notifyObservers(new Response(1, "Loading file...", Response.NORMAL));
             setChanged();
-            notifyObservers("1-Convirtiendo archivo a formato Excel");
-            this.fileExcel = new XSSFWorkbook(fis);
+            notifyObservers(new Response(1, "Converting file to Excel format...", Response.NORMAL));
+            fileExcel = (XSSFWorkbook) WorkbookFactory.create(file);
+            verifySheet();
             setChanged();
-            notifyObservers(this.getColumnHeader());
+            notifyObservers(getColumnHeader());
+            setChanged();
+            notifyObservers(new Response(2, file.getName(), Response.NORMAL));
+            setChanged();
+            notifyObservers(new Response(3, file.getAbsolutePath(), Response.NORMAL));
+            setChanged();
+            notifyObservers(new Response(1, "File loaded!", Response.OK));
         } catch (FileNotFoundException ex) {
-            notifyObservers("1-Archivo no encontrado");
-        } catch (IOException ex) {
-            notifyObservers("1-No se pudo leer el archivo");
-        } finally {
-            try {
-                fis.close();
-            } catch (IOException ex) {
-                notifyObservers("1-No se pudo cerrar el archivo");
-            }
+            notifyObservers(new Response(1, "File not found", Response.FAIL));
+            setChanged();
+            notifyObservers(new Response(2, "not found", Response.NORMAL));
+            setChanged();
+            notifyObservers(new Response(3, "/", Response.NORMAL));
+        } catch (IOException | InvalidFormatException | EncryptedDocumentException ex) {
+            notifyObservers(new Response(1, "File not open", Response.FAIL));
+            setChanged();
+            notifyObservers(new Response(2, "not found", Response.NORMAL));
+            setChanged();
+            notifyObservers(new Response(3, "File not open", Response.NORMAL));
+        } catch (Exception ex) {
+            setChanged();
+            notifyObservers(new Response(1, ex.getMessage(), Response.FAIL));
         }
+        setChanged();
+        notifyObservers(false);
+    }
+    
+    private void verifySheet() throws Exception {
+        XSSFSheet sheet1 = fileExcel.getSheet("Sources");
+        XSSFSheet sheet2 = fileExcel.getSheet("ASJC codes");
+        if (sheet1 == null && sheet2 == null) throw new Exception("File not found sheet \"Sources\" and \"ASJC codes\"");
+        if (sheet1 == null) throw new Exception("File not found sheet \"Sources\"");
+        if (sheet2 == null) throw new Exception("File not found sheet \"ASJC codes\"");        
     }
     
     public ArrayList<String> getColumnHeader() {
         ArrayList<String> headers = new ArrayList<>();
-        XSSFSheet sheet = fileExcel.getSheetAt(1);
-        for (Row row : sheet) {
-            int i = 0;
-            for (Cell cell : row) {
-                headers.add(i + "-" + cell.getStringCellValue());
-                i++;
+        XSSFSheet sheet = fileExcel.getSheet("Sources");
+        if (sheet != null) {
+            for (Row row : sheet) {
+                int i = 0;
+                for (Cell cell : row) {
+                    headers.add(i + "-" + cell.getStringCellValue());
+                    i++;
+                }
+                break;
             }
-            break;
+        } else {
+            setChanged();
+            notifyObservers(new Response(1, "File not found sheet \"Sources\"", Response.FAIL));
         }
         return headers;
     }
     
     public ArrayList<PaperArea> getSubAreas() {
         ArrayList<PaperArea> areas = new ArrayList<>();
-        XSSFSheet sheet = fileExcel.getSheetAt(2);
-        for (Row row : sheet) {
-            String value = row.getCell(1).getStringCellValue();
-            XSSFCellStyle cellStyle = (XSSFCellStyle) row.getCell(1).getCellStyle();
-            XSSFFont font = cellStyle.getFont();
-            if (font.getBold() && !value.equals("Description")) {
-                areas.add(new PaperArea(value));
-            } else if (!font.getBold()) {
-                areas.get(areas.size() - 1).getSubAreas().add(new PaperArea(value));
+        XSSFSheet sheet = fileExcel.getSheet("ASJC codes");
+        if (sheet != null) {
+            for (Row row : sheet) {
+                double valueCode = -1;
+                try {
+                    valueCode = row.getCell(0).getNumericCellValue();
+                } catch (Exception e) {}
+                String valueName = row.getCell(1).getStringCellValue();
+                XSSFCellStyle cellStyle = (XSSFCellStyle) row.getCell(1).getCellStyle();
+                XSSFFont font = cellStyle.getFont();
+                if (font.getBold() && !valueName.equals("Description")) {
+                    areas.add(new PaperArea(valueName));
+                } else if (!font.getBold()) {
+                    areas.get(areas.size() - 1).getSubAreas().add(new PaperArea(valueCode + "-" + valueName));
+                }
             }
+        } else {
+            setChanged();
+            notifyObservers(new Response(1, "File not found sheet \"ASJC codes\"", Response.FAIL));
         }
         return areas;
+    }
+    
+    @Override
+    public void run() {
+        loadFile();
     }
 
     public File getFile() {
@@ -92,11 +137,6 @@ public class FileExcel extends Observable implements Runnable{
 
     public XSSFWorkbook getFileExcel() {
         return fileExcel;
-    }
-
-    @Override
-    public void run() {
-        loadFile();
     }
     
 }

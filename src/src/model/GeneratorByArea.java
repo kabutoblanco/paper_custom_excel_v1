@@ -13,9 +13,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -30,19 +27,24 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import src.response.Response;
 
 /**
  *
  * @author daniel
  */
 public class GeneratorByArea extends GeneratorExcel implements Runnable {
-    String location;
+    String location, directory;
     Object[] columnsSelect;
 
     public void setLocation(String location) {
         this.location = location;
     }
 
+    public void setDirectory(String directory) {
+        this.directory = directory;
+    }
+    
     public void setColumnsSelect(Object[] columnsSelect) {
         this.columnsSelect = columnsSelect;
     }
@@ -57,21 +59,21 @@ public class GeneratorByArea extends GeneratorExcel implements Runnable {
         setChanged();
         notifyObservers(true);
         setChanged();
-        notifyObservers("0-Cargando subáreas");
+        notifyObservers(new Response(0, "Loading subareas...", Response.NORMAL));
         ArrayList<PaperArea> areas = fileExcel.getSubAreas();
         setChanged();
-        notifyObservers("0-Cargando hoja de papers");
+        notifyObservers(new Response(0, "Loading sheet papers...", Response.NORMAL));
+        XSSFSheet sheet = fileExcel.getFileExcel().getSheet("Sources");
         setChanged();
-        XSSFSheet sheet = fileExcel.getFileExcel().getSheetAt(1);
-        notifyObservers("0-Recorriendo lista de papers");
+        notifyObservers(new Response(0, "Loop papers...", Response.NORMAL));
         int i = 0;
         for (Row row : sheet) {
             if (i != 0) {
-                String value = row.getCell(9).getStringCellValue();
+                double valueCode = row.getCell(8).getNumericCellValue();
                 for (PaperArea area : areas) {
                     boolean flag = false;
                     for (PaperArea subArea : area.getSubAreas()) {
-                        if (subArea.getArea().equals(value)) {
+                        if (valueCode == Double.parseDouble(subArea.getArea().split("-")[0])) {
                             // saved paper whitin subarea
                             String paperValue = "";
                             for (Object select : columnsSelect) {
@@ -99,17 +101,19 @@ public class GeneratorByArea extends GeneratorExcel implements Runnable {
         }
         Workbook wb = new XSSFWorkbook();
         setChanged();
-        notifyObservers("0-Generando nuevo archivo Excel");
-        XSSFSheet sheet_v1 = (XSSFSheet) wb.createSheet("example");
+        notifyObservers(new Response(0, "Building new Excel file...", Response.NORMAL));
+        XSSFSheet sheet_v1 = (XSSFSheet) wb.createSheet("sheet 1");
         setChanged();
-        notifyObservers("0-Generando nuevos registros");
+        notifyObservers(new Response(0, "Building new records...", Response.NORMAL));
+        
+        areas.sort((PaperArea o1, PaperArea o2) -> o1.getArea().compareTo(o2.getArea()));
 
         i = -1;
         for (PaperArea area : areas) {
             for (PaperArea subArea : area.getSubAreas()) {
                 i++;
                 setChanged();
-                notifyObservers("0-Generando registros de " + subArea.getArea() );
+                notifyObservers(new Response(0, "Loading records of the " + subArea.getArea() + "...", Response.NORMAL));
                 XSSFRow rowHeader = (XSSFRow) sheet_v1.createRow(i);
                 XSSFCell cellHeader = rowHeader.createCell(0);
                 cellHeader.setCellValue("Scopus Suject Area \"" + area.getArea() + "\"");                
@@ -119,14 +123,14 @@ public class GeneratorByArea extends GeneratorExcel implements Runnable {
                 i++;
                 XSSFRow rowSubHeader = (XSSFRow) sheet_v1.createRow(i);
                 XSSFCell cellSubHeader = rowSubHeader.createCell(0);
-                cellSubHeader.setCellValue("Scopus Sub Suject Area \"" + subArea.getArea() + "\"");                
+                cellSubHeader.setCellValue("Scopus Sub Suject Area \"" + subArea.getArea().split("-")[1] + "\"");                
                 sheet_v1.addMergedRegion(new CellRangeAddress(i, i, 0, columnsSelect.length));
                 cellSubHeader.setCellStyle(customCellForeground("#deebf7", "#843c0b", HorizontalAlignment.CENTER, 16, wb));
                 rowSubHeader.setHeight((short) (6 * 100));
                 i++;
                 XSSFRow rowTitle = (XSSFRow) sheet_v1.createRow(i);
                 setChanged();
-                notifyObservers("0-Generando estilos");
+                notifyObservers(new Response(0, "Applying styles...", Response.NORMAL));
                 for (int j = -1; j < columnsSelect.length; j++) {                    
                     if (j == -1) {
                         XSSFCell cellTitle = rowTitle.createCell(0);
@@ -141,7 +145,7 @@ public class GeneratorByArea extends GeneratorExcel implements Runnable {
                     
                 }
                 rowTitle.setHeight((short) (5 * 100));
-                int k = 0;
+                int k = 1;
                 for (PaperArea subAreaPaper : subArea.getSubAreas()) {
                     i++;
                     XSSFRow rowBody = (XSSFRow) sheet_v1.createRow(i);
@@ -162,19 +166,26 @@ public class GeneratorByArea extends GeneratorExcel implements Runnable {
                 sheet_v1.setColumnWidth(j, 30 * 100);            
         }
         setChanged();
-        notifyObservers("0-Intentando guardar archivo");
+        notifyObservers(new Response(0, "Trying save file...", Response.NORMAL));
         setChanged();
         try {
-            OutputStream fileOut = new FileOutputStream(location + "paper.xlsx");
+            OutputStream fileOut = new FileOutputStream(location);
             wb.write(fileOut);
-            notifyObservers("0-Archivo guardado");
+            notifyObservers(false);
+            setChanged();
+            notifyObservers(new Response(3, location + "?" + directory, Response.NORMAL));
+            setChanged();
+            notifyObservers(new Response(0, "File saved!", Response.OK));
+            
         } catch (FileNotFoundException ex) {
-            notifyObservers("0-No existe el archivo");
+            notifyObservers(new Response(0, "File not found", Response.FAIL));
+            setChanged();
+            notifyObservers(false);
         } catch (IOException ex) {
-            notifyObservers("0-No se puede guardar el archivo");
+            notifyObservers(new Response(0, "File not saved", Response.FAIL));
+            setChanged();
+            notifyObservers(false);
         }
-        setChanged();
-        notifyObservers(false);
     }
 
     @Override
