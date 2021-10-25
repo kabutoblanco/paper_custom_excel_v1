@@ -92,7 +92,7 @@ public class JPanelInformation extends JPanel implements Observer {
             }
             if (o.getClass() == GeneratorByArea.class && response.getStatus().equals(Response.OK)) {
                 String[] options = new String[]{"Open file", "Open directory", "Close"};
-                int option = JOptionPane.showOptionDialog(getParent(), "Message", "Title", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+                int option = JOptionPane.showOptionDialog(getParent(), "What do you want to do?", "Saved file", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
                 switch (option) {
                     case 0:
                         try {

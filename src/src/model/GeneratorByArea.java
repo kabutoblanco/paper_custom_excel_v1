@@ -109,47 +109,52 @@ public class GeneratorByArea extends GeneratorExcel implements Runnable {
         areas.sort((PaperArea o1, PaperArea o2) -> o1.getArea().compareTo(o2.getArea()));
 
         i = -1;
+        XSSFRow rowHeader, rowSubHeader, rowTitle;
+        XSSFCell cellHeader, cellSubHeader, cellTitle;
         for (PaperArea area : areas) {
             for (PaperArea subArea : area.getSubAreas()) {
                 i++;
                 setChanged();
                 notifyObservers(new Response(0, "Loading records of the " + subArea.getArea() + "...", Response.NORMAL));
-                XSSFRow rowHeader = (XSSFRow) sheet_v1.createRow(i);
-                XSSFCell cellHeader = rowHeader.createCell(0);
+                rowHeader = (XSSFRow) sheet_v1.createRow(i);
+                cellHeader = rowHeader.createCell(0);
                 cellHeader.setCellValue("Scopus Suject Area \"" + area.getArea() + "\"");                
                 sheet_v1.addMergedRegion(new CellRangeAddress(i, i, 0, columnsSelect.length));
                 cellHeader.setCellStyle(customCellForeground("#1f4e79", "#ffffff", HorizontalAlignment.CENTER, 18, wb));
                 rowHeader.setHeight((short) (7 * 100));
                 i++;
-                XSSFRow rowSubHeader = (XSSFRow) sheet_v1.createRow(i);
-                XSSFCell cellSubHeader = rowSubHeader.createCell(0);
+                rowSubHeader = (XSSFRow) sheet_v1.createRow(i);
+                cellSubHeader = rowSubHeader.createCell(0);
                 cellSubHeader.setCellValue("Scopus Sub Suject Area \"" + subArea.getArea().split("-")[1] + "\"");                
                 sheet_v1.addMergedRegion(new CellRangeAddress(i, i, 0, columnsSelect.length));
                 cellSubHeader.setCellStyle(customCellForeground("#deebf7", "#843c0b", HorizontalAlignment.CENTER, 16, wb));
                 rowSubHeader.setHeight((short) (6 * 100));
                 i++;
-                XSSFRow rowTitle = (XSSFRow) sheet_v1.createRow(i);
+                rowTitle = (XSSFRow) sheet_v1.createRow(i);
                 setChanged();
                 notifyObservers(new Response(0, "Applying styles...", Response.NORMAL));
                 for (int j = -1; j < columnsSelect.length; j++) {                    
                     if (j == -1) {
-                        XSSFCell cellTitle = rowTitle.createCell(0);
+                        cellTitle = rowTitle.createCell(0);
                         cellTitle.setCellValue("#");
                         cellTitle.setCellStyle(customCellForeground("#5b9bd5", "#ffffff", HorizontalAlignment.LEFT, 11, wb));
                     } else {
                         String header = ((String) columnsSelect[j]).split("-")[1];
-                        XSSFCell cellTitle = rowTitle.createCell(j + 1);
+                        cellTitle = rowTitle.createCell(j + 1);
                         cellTitle.setCellValue(header);
                         cellTitle.setCellStyle(customCellForeground("#5b9bd5", "#ffffff", HorizontalAlignment.LEFT, 11, wb));
                     }
                     
                 }
                 rowTitle.setHeight((short) (5 * 100));
+                System.gc();
                 int k = 1;
+                XSSFRow rowBody;
+                String[] values;
                 for (PaperArea subAreaPaper : subArea.getSubAreas()) {
                     i++;
-                    XSSFRow rowBody = (XSSFRow) sheet_v1.createRow(i);
-                    String[] values = subAreaPaper.getArea().split("\r");
+                    rowBody = (XSSFRow) sheet_v1.createRow(i);
+                    values = subAreaPaper.getArea().split("\r");
                     rowBody.createCell(0).setCellValue(k);
                     for (int j = 0; j < values.length; j++) {
                         rowBody.createCell(j + 1).setCellValue(values[j]);
@@ -158,6 +163,7 @@ public class GeneratorByArea extends GeneratorExcel implements Runnable {
                 }
             }
         }
+        
         for (int j = 0; j < columnsSelect.length; j++) {
             sheet_v1.setColumnWidth(0, 10 * 100);
             if (columnsSelect[j].equals("1-Title"))
@@ -183,6 +189,10 @@ public class GeneratorByArea extends GeneratorExcel implements Runnable {
             notifyObservers(false);
         } catch (IOException ex) {
             notifyObservers(new Response(0, "File not saved", Response.FAIL));
+            setChanged();
+            notifyObservers(false);
+        } catch (OutOfMemoryError e){
+            notifyObservers(new Response(0, "Memory overhead, try with less columns", Response.FAIL));
             setChanged();
             notifyObservers(false);
         }
